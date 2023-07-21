@@ -28,63 +28,66 @@ def shuffle_images_for_data(filename_list, num_images):
 
     return filename_list
 
-
-framesdir = 'frames/'
-siftdir = 'sift/'
-
-# Get a list of all the .mat file in that directory. There is one .mat file per image.
-# Preparation of data
-fnames = glob.glob(siftdir + '*.mat')
-fnames = [i[-27:] for i in fnames]
-
-fname1 = siftdir + fnames[0]
-mat1 = scipy.io.loadmat(fname1)
-
-X_data = mat1['descriptors']
-
-count = mat1['descriptors'].shape[0]
-image_decriptors_count_list = [count]
-
-lower_limit, upper_limit = 3, 4
-image_decriptors_count_list_updated = []
-
-mat_updated = np.empty((1, 128), dtype=float)
-count = 0
-num_of_images = 20
-
-# an array to store the corresponding image name and the descriptor index with respect to that image
-descriptor_info = np.empty((1, 2), dtype='<U25')
-
-# choosing random images from all the images
-fnames = shuffle_images_for_data(fnames, num_of_images)
-
-
-for i in range(0, num_of_images):
-    fname = siftdir + fnames[i]
-    mat = scipy.io.loadmat(fname)
-    numfeats = mat['descriptors'].shape[0]
-
-
-    for j in range(numfeats):
-        if mat['scales'][j] > lower_limit and mat['scales'][j] < upper_limit:
-            desciptors_row_correct_shape = np.expand_dims(mat['descriptors'][j], 0)
-            mat_updated = np.concatenate((mat_updated, desciptors_row_correct_shape), axis=0)
-            temp_descriptor_info = np.array([[fnames[i], j]], dtype='<U35')
-            descriptor_info = np.concatenate((descriptor_info, temp_descriptor_info), axis=0)
-            count+=1
-
-    image_decriptors_count_list_updated.append(count)
-
-
-print(f'No.of descriptors is: {count} | No.of images scanned: {num_of_images} | Scale varies from {lower_limit} to {upper_limit}'   )
-
-# X_data now houses the required descriptors that fall in the scale range
-# also, we can use image_decriptors_count_list_updated to tell which image a
-# particular descriptor comes from which image.
-mat_updated = np.delete(mat_updated, 0, 0)
-descriptor_info = np.delete(descriptor_info, 0, 0)
-X_data = mat_updated
-
+#
+# framesdir = 'frames/'
+# siftdir = 'sift/'
+#
+# # Get a list of all the .mat file in that directory. There is one .mat file per image.
+# # Preparation of data
+# fnames = glob.glob(siftdir + '*.mat')
+# fnames = [i[-27:] for i in fnames]
+#
+# fname1 = siftdir + fnames[0]
+# mat1 = scipy.io.loadmat(fname1)
+#
+# X_data = mat1['descriptors']
+#
+# count = mat1['descriptors'].shape[0]
+# image_decriptors_count_list = [count]
+#
+# lower_limit, upper_limit = 3, 4
+# image_decriptors_count_list_updated = []
+#
+# mat_updated = np.empty((1, 128), dtype=float)
+# count = 0
+# num_of_images = 20
+#
+# # an array to store the corresponding image name and the descriptor index with respect to that image
+# descriptor_info = np.empty((1, 2), dtype='<U25')
+#
+# # choosing random images from all the images
+# # fnames = shuffle_images_for_data(fnames, num_of_images)
+#
+#
+# for i in range(0, num_of_images):
+#     fname = siftdir + fnames[i]
+#     mat = scipy.io.loadmat(fname)
+#     numfeats = mat['descriptors'].shape[0]
+#
+#
+#     for j in range(numfeats):
+#         if mat['scales'][j] > lower_limit and mat['scales'][j] < upper_limit:
+#             desciptors_row_correct_shape = np.expand_dims(mat['descriptors'][j], 0)
+#             mat_updated = np.concatenate((mat_updated, desciptors_row_correct_shape), axis=0)
+#             temp_descriptor_info = np.array([[fnames[i], j]], dtype='<U35')
+#             descriptor_info = np.concatenate((descriptor_info, temp_descriptor_info), axis=0)
+#             count+=1
+#
+#     image_decriptors_count_list_updated.append(count)
+#
+#
+# print(f'No.of descriptors is: {count} | No.of images scanned: {num_of_images} | Scale varies from {lower_limit} to {upper_limit}'   )
+#
+# # X_data now houses the required descriptors that fall in the scale range
+# # also, we can use image_decriptors_count_list_updated to tell which image a
+# # particular descriptor comes from which image.
+# mat_updated = np.delete(mat_updated, 0, 0)
+# descriptor_info = np.delete(descriptor_info, 0, 0)
+# X_data = mat_updated
+#
+# np.save('descriptors_20_images.npy', X_data)
+# np.save('descriptors_info_20_images.npy', descriptor_info)
+#
 
 def get_image_info(list_of_count, index):
     '''
@@ -235,12 +238,14 @@ def kMeans_init_centroids(X, K):
     return centroids
 
 
-# k-means clustering
-K = 40
-max_iters = 50
-initial_centroids = kMeans_init_centroids(X_data, K)
-centroids, idx = run_kMeans(X_data, initial_centroids, max_iters)
-
+# # k-means clustering
+# K = 100
+# max_iters = 200
+# initial_centroids = kMeans_init_centroids(X_data, K)
+# centroids, idx = run_kMeans(X_data, initial_centroids, max_iters)
+#
+# np.save('centroids.npy', centroids)
+# np.save('idx.npy', idx)
 
 def see_patches_together(cluster_num, descriptor_info, idx):
     """
@@ -359,24 +364,24 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
 
 
 
-print('The K-Means Clustering is complete and ready for viewing....')
-print(f'No.of visual words is {K}')
-
-want_to_continue = 'y'
-while want_to_continue == 'y':
-
-    cluster_no = int(input(f'\nEnter the cluster number you would like to see (0-{K-1}): '))
-    see_patches = input(f'If you want to see all patches at the same time enter y or else enter n: ')
-    print()
-
-    if see_patches == 'y':
-        see_patches_together(cluster_no, descriptor_info, idx)
-    elif see_patches == 'n':
-        see_individual_patches(cluster_no, descriptor_info, idx)
-    else:
-        print('Enter either y or n\n')
-
-    want_to_continue = input('If you want to see more clusters type y or else type n: ')
+# print('The K-Means Clustering is complete and ready for viewing....')
+# print(f'No.of visual words is {K}')
+#
+# want_to_continue = 'y'
+# while want_to_continue == 'y':
+#
+#     cluster_no = int(input(f'\nEnter the cluster number you would like to see (0-{K-1}): '))
+#     see_patches = input(f'If you want to see all patches at the same time enter y or else enter n: ')
+#     print()
+#
+#     if see_patches == 'y':
+#         see_patches_together(cluster_no, descriptor_info, idx)
+#     elif see_patches == 'n':
+#         see_individual_patches(cluster_no, descriptor_info, idx)
+#     else:
+#         print('Enter either y or n\n')
+#
+#     want_to_continue = input('If you want to see more clusters type y or else type n: ')
 
 
 
