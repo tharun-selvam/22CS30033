@@ -10,7 +10,7 @@ from skimage.color import rgb2gray
 import matplotlib.cm as cm
 from skimage import io
 import pylab as pl
-from rough import find_closest_centroids
+# from rough import find_closest_centroids
 
 idx = np.load('dataFiles/idx.npy')
 centroids = np.load('dataFiles/centroids.npy')
@@ -27,7 +27,8 @@ def build_histogram_of_image(image_name, visual_words):
         visual_words (ndarray (K, )): represents the centers of visual_words
     """
 
-    mat = scipy.io.loadmat(image_name)
+    image_path = siftdir + image_name
+    mat = scipy.io.loadmat(image_path)
     X = mat['descriptors']
 
     K = visual_words.shape[0]
@@ -43,9 +44,9 @@ def build_histogram_of_image(image_name, visual_words):
         a = np.argmin(distance)
         histogram[a] += 1
 
-    return histogram
+    normalised_histogram = histogram / np.sum(histogram)
 
-
+    return histogram, normalised_histogram
 
 
 
