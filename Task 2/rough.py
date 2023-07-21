@@ -50,7 +50,7 @@ image_decriptors_count_list_updated = []
 
 mat_updated = np.empty((1, 128), dtype=float)
 count = 0
-num_of_images = 100
+num_of_images = 20
 
 # an array to store the corresponding image name and the descriptor index with respect to that image
 descriptor_info = np.empty((1, 2), dtype='<U25')
@@ -236,37 +236,87 @@ def kMeans_init_centroids(X, K):
 
 
 # k-means clustering
-K = 200
+K = 40
 max_iters = 50
 initial_centroids = kMeans_init_centroids(X_data, K)
 centroids, idx = run_kMeans(X_data, initial_centroids, max_iters)
 
-# for i in range(len(idx)):
-#     print(idx[i])
 
-# displaying the images
-for i in range(K):
+def see_patches_together(cluster_num, descriptor_info, idx):
+    """
+        cluster_num (int): specifies the cluster number to be viewed
+        descriptor_info (ndarray): contains the information of the descriptor like image name and descriptor number
+        idx (ndarray): contains the cluster numbers of the corresponding descriptor
+    """
+
     count = 1
+    images = []
     for j in range(len(idx)):
-        if idx[j] == i:
+        if idx[j] == cluster_num:
             # print all the descriptors with j
             image_name, patch_num = descriptor_info[j, 0], descriptor_info[j, 1]
             patch_num = int(patch_num)
-            print(f'Cluster number: {i} | image no: {image_name} | point no: {count}')
+            print(f'Cluster number: {cluster_num} | image name: {image_name} | point no: {count}')
             fname = siftdir + image_name
             mat = scipy.io.loadmat(fname)
 
             imname = framesdir + image_name[:-4]
             im = io.imread(imname)
 
-            # img_patch = getPatchFromSIFTParameters(mat['positions'][patch_num,:], mat['scales'][patch_num], mat['orients'][patch_num], rgb2gray(im))
-            # plt.imshow(img_patch, cmap=cm.Greys_r)
-            # plt.show()
+            img_patch = getPatchFromSIFTParameters(mat['positions'][patch_num,:], mat['scales'][patch_num], mat['orients'][patch_num], rgb2gray(im))
+            plt.imshow(img_patch, cmap=cm.Greys_r)
+
+            count += 1
+            images.append(img_patch)
+
+    # Calculate the number of rows and columns for the subplot grid
+    num_images = len(images)
+    rows = int(num_images**0.5)  # Square root of the number of images rounded down
+    cols = (num_images + rows - 1) // rows  # Round up the number of columns
+
+    # Create a grid of subplots
+    fig, axs = plt.subplots(rows, cols)
+
+    # Loop through the subplots and display the images
+    for i, ax in enumerate(axs.flat):
+        if i < num_images:
+            ax.imshow(images[i])
+            ax.axis('off')  # Turn off axis labels and ticks for cleaner display
+        else:
+            ax.axis('off')  # Turn off empty subplots (if there are fewer images than subplots)
+
+    # Adjust the layout and spacing of the subplots
+    plt.tight_layout()
+
+    # Show the plot with all the images
+    plt.show()
+
+
+
+def see_individual_patches(cluster_num, descriptor_info, idx):
+    """
+        cluster_num (int): specifies the cluster number to be viewed
+        descriptor_info (ndarray): contains the information of the descriptor like image name and descriptor number
+        idx (ndarray): contains the cluster numbers of the corresponding descriptor
+    """
+    count = 1
+    images = []
+    for j in range(len(idx)):
+        if idx[j] == cluster_num:
+            # print all the descriptors with j
+            image_name, patch_num = descriptor_info[j, 0], descriptor_info[j, 1]
+            patch_num = int(patch_num)
+            print(f'Cluster number: {cluster_num} | image no: {image_name} | point no: {count}')
+            fname = siftdir + image_name
+            mat = scipy.io.loadmat(fname)
+
+            imname = framesdir + image_name[:-4]
+            im = io.imread(imname)
 
             print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
 
             fig = plt.figure()
-            ax = fig.add_subplot(111)
+            ax = fig.add_subplot()
             ax.imshow(im)
             coners = displaySIFTPatches(mat['positions'][patch_num:patch_num+1,:], mat['scales'][patch_num:patch_num+1,:], mat['orients'][patch_num:patch_num+1,:])
 
@@ -280,37 +330,123 @@ for i in range(K):
             plt.gca().invert_yaxis()
 
             count += 1
-            plt.show()
 
             # List of images (you can replace these with your own images)
-            images = [image1, image2, image3, ...]  # Replace with your images or image paths
+            images.append(im)
 
             # Calculate the number of rows and columns for the subplot grid
-            num_images = len(images)
-            rows = int(num_images**0.5)  # Square root of the number of images rounded down
-            cols = (num_images + rows - 1) // rows  # Round up the number of columns
+    num_images = len(images)
+    rows = int(num_images**0.5)  # Square root of the number of images rounded down
+    cols = (num_images + rows - 1) // rows  # Round up the number of columns
 
-            # Create a grid of subplots
-            fig, axs = plt.subplots(rows, cols)
+    # Create a grid of subplots
+    fig, axs = plt.subplots(rows, cols)
 
-            # Loop through the subplots and display the images
-            for i, ax in enumerate(axs.flat):
-                if i < num_images:
-                    ax.imshow(images[i])
-                    ax.axis('off')  # Turn off axis labels and ticks for cleaner display
-                else:
-                    ax.axis('off')  # Turn off empty subplots (if there are fewer images than subplots)
+    # Loop through the subplots and display the images
+    for i, ax in enumerate(axs.flat):
+        if i < num_images:
+            ax.imshow(images[i])
+            ax.axis('off')  # Turn off axis labels and ticks for cleaner display
+        else:
+            ax.axis('off')  # Turn off empty subplots (if there are fewer images than subplots)
 
-            # Adjust the layout and spacing of the subplots
-            plt.tight_layout()
+    # Adjust the layout and spacing of the subplots
+    plt.tight_layout()
 
-            # Show the plot with all the images
-        plt.show()
-
-
+    # Show the plot with all the images
+    plt.show()
 
 
 
+
+print('The K-Means Clustering is complete and ready for viewing....')
+print(f'No.of visual words is {K}')
+
+want_to_continue = 'y'
+while want_to_continue == 'y':
+
+    cluster_no = int(input(f'\nEnter the cluster number you would like to see (0-{K-1}): '))
+    see_patches = input(f'If you want to see all patches at the same time enter y or else enter n: ')
+    print()
+
+    if see_patches == 'y':
+        see_patches_together(cluster_no, descriptor_info, idx)
+    elif see_patches == 'n':
+        see_individual_patches(cluster_no, descriptor_info, idx)
+    else:
+        print('Enter either y or n\n')
+
+    want_to_continue = input('If you want to see more clusters type y or else type n: ')
+
+
+
+
+
+# # displaying the images
+# for i in range(K):
+#     count = 1
+#     images = []
+#     for j in range(len(idx)):
+#         if idx[j] == i:
+#             # print all the descriptors with j
+#             image_name, patch_num = descriptor_info[j, 0], descriptor_info[j, 1]
+#             patch_num = int(patch_num)
+#             print(f'Cluster number: {i} | image no: {image_name} | point no: {count}')
+#             fname = siftdir + image_name
+#             mat = scipy.io.loadmat(fname)
+#
+#             imname = framesdir + image_name[:-4]
+#             im = io.imread(imname)
+#
+#             img_patch = getPatchFromSIFTParameters(mat['positions'][patch_num,:], mat['scales'][patch_num], mat['orients'][patch_num], rgb2gray(im))
+#             plt.imshow(img_patch, cmap=cm.Greys_r)
+#             # plt.show()
+#
+#             # print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
+#             #
+#             # fig = plt.figure()
+#             # ax = fig.add_subplot()
+#             # ax.imshow(im)
+#             # coners = displaySIFTPatches(mat['positions'][patch_num:patch_num+1,:], mat['scales'][patch_num:patch_num+1,:], mat['orients'][patch_num:patch_num+1,:])
+#             #
+#             # for j in range(len(coners)):
+#             #     ax.plot([coners[j][0][1], coners[j][1][1]], [coners[j][0][0], coners[j][1][0]], color='g', linestyle='-', linewidth=1)
+#             #     ax.plot([coners[j][1][1], coners[j][2][1]], [coners[j][1][0], coners[j][2][0]], color='g', linestyle='-', linewidth=1)
+#             #     ax.plot([coners[j][2][1], coners[j][3][1]], [coners[j][2][0], coners[j][3][0]], color='g', linestyle='-', linewidth=1)
+#             #     ax.plot([coners[j][3][1], coners[j][0][1]], [coners[j][3][0], coners[j][0][0]], color='g', linestyle='-', linewidth=1)
+#             # ax.set_xlim(0, im.shape[1])
+#             # ax.set_ylim(0, im.shape[0])
+#             # plt.gca().invert_yaxis()
+#
+#             count += 1
+#             # plt.show()
+#
+#             # List of images (you can replace these with your own images)
+#             # images = [image1, image2, image3, ...]  # Replace with your images or image paths
+#             images.append(img_patch)
+#
+#             # Calculate the number of rows and columns for the subplot grid
+#     num_images = len(images)
+#     rows = int(num_images**0.5)  # Square root of the number of images rounded down
+#     cols = (num_images + rows - 1) // rows  # Round up the number of columns
+#
+#     # Create a grid of subplots
+#     fig, axs = plt.subplots(rows, cols)
+#
+#     # Loop through the subplots and display the images
+#     for i, ax in enumerate(axs.flat):
+#         if i < num_images:
+#             ax.imshow(images[i])
+#             ax.axis('off')  # Turn off axis labels and ticks for cleaner display
+#         else:
+#             ax.axis('off')  # Turn off empty subplots (if there are fewer images than subplots)
+#
+#     # Adjust the layout and spacing of the subplots
+#     plt.tight_layout()
+#
+#     # Show the plot with all the images
+#     plt.show()
+#
 
 
 
