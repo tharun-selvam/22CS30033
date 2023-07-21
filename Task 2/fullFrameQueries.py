@@ -12,8 +12,8 @@ from skimage import io
 import pylab as pl
 from rough import find_closest_centroids
 
-idx = np.load('idx.npy')
-centroids = np.load('centroids.npy')
+idx = np.load('dataFiles/idx.npy')
+centroids = np.load('dataFiles/centroids.npy')
 
 framesdir = 'frames/'
 siftdir = 'sift/'

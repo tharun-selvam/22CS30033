@@ -35,7 +35,7 @@ N = 100 #to visualize a sparser set of the features
 
 
 
-# Loop through all the data files found
+# Loop through all the dataFiles found
 for i in range(1):
     print('reading frame %d of %d' %(i, len(fnames)))
 
