@@ -49,13 +49,31 @@ def build_histogram_of_image(image_name, visual_words):
     return histogram, normalised_histogram
 
 
+# histogram_combined = np.empty((1, centroids.shape[0]), dtype=float)
+# normalised_histogram_combined = np.empty((1, centroids.shape[0]), dtype=float)
+#
+# for i in range(len(fnames)):
+#
+#     if i % 10 == 0:
+#         print(f'{i} images completed of {len(fnames)}')
+#
+#     histogram, normalised_histogram = build_histogram_of_image(fnames[i], centroids)
+#
+#     histogram = np.expand_dims(histogram, axis=0)
+#     normalised_histogram = np.expand_dims(normalised_histogram, axis=0)
+#
+#     histogram_combined = np.concatenate((histogram_combined, histogram), axis=0)
+#     normalised_histogram_combined = np.concatenate((normalised_histogram_combined, normalised_histogram), axis=0)
+#
+# histogram_combined = np.delete(histogram_combined, 0, 0)
+# normalised_histogram_combined = np.delete(normalised_histogram_combined, 0, 0)
 
+# np.save('histogram_images_combined', histogram_combined)
+# np.save('normalised_histogram_images_combined', normalised_histogram_combined)
 
+histogram_images_combined = np.load('histogram_images_combined.npy')
+normalised_histogram_images_combined = np.load('normalised_histogram_images_combined.npy')
 
-
-
-
-
-
+print(normalised_histogram_images_combined.shape)
 
 
