@@ -71,9 +71,75 @@ def build_histogram_of_image(image_name, visual_words):
 # np.save('histogram_images_combined', histogram_combined)
 # np.save('normalised_histogram_images_combined', normalised_histogram_combined)
 
-histogram_images_combined = np.load('histogram_images_combined.npy')
-normalised_histogram_images_combined = np.load('normalised_histogram_images_combined.npy')
+histogram_images_combined = np.load('histogram_images_combined_20_images.npy')
+normalised_histogram_images_combined = np.load('normalised_histogram_images_combined_20_images.npy')
 
-print(normalised_histogram_images_combined.shape)
+
+def get_the_best_frames(image_idx, num_images, normalised_histogram_combined):
+    """
+        image_idx: the index of the images wrt fnames list
+        num_images: the num_of_images needed to display
+
+        return: a list containing the best matched images
+    """
+
+    m = normalised_histogram_combined.shape[0]
+
+    # broadcasted array containing the same size as normalised_histogram_combined
+    broadcasted_array = np.tile(normalised_histogram_combined[image_idx], (m, 1))
+
+    result_array = broadcasted_array * normalised_histogram_combined
+
+    result_array = np.sum(result_array, axis=1)
+    sorted_array = np.argsort(result_array)
+
+    return sorted_array[:num_images]
+
+image_idx = 12
+matched_frames = get_the_best_frames(image_idx, 5, normalised_histogram_images_combined)
+
+
+fname = siftdir + fnames[image_idx]
+mat = scipy.io.loadmat(fname)
+
+imname = framesdir + fnames[image_idx][:-4]
+im = io.imread(imname)
+
+# print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
+
+fig = plt.figure()
+ax = fig.add_subplot()
+ax.imshow(im)
+plt.show()
+
+for i in matched_frames:
+    fname = siftdir + fnames[i]
+    mat = scipy.io.loadmat(fname)
+
+    imname = framesdir + fnames[i][:-4]
+    im = io.imread(imname)
+
+    # print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.imshow(im)
+    plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
