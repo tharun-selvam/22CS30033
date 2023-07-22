@@ -37,59 +37,129 @@ siftdir = 'sift/'
 fnames = glob.glob(siftdir + '*.mat')
 fnames = [i[-27:] for i in fnames]
 
-fname1 = siftdir + fnames[0]
-mat1 = scipy.io.loadmat(fname1)
+# fname1 = siftdir + fnames[0]
+# mat1 = scipy.io.loadmat(fname1)
+#
+# X_data = mat1['descriptors']
+#
+# count = mat1['descriptors'].shape[0]
+# image_decriptors_count_list = [count]
+#
+# lower_limit, upper_limit = 3, 4
+# image_decriptors_count_list_updated = []
+#
+# mat_updated = np.empty((1, 128), dtype=float)
+# count = 0
+# num_of_images = 50
+#
+# # an array to store the corresponding image name and the descriptor index with respect to that image
+# descriptor_info = np.empty((1, 2), dtype='<U25')
+#
+# # choosing random images from all the images
+# # fnames = shuffle_images_for_data(fnames, num_of_images)
+#
+#
+# for i in range(0, num_of_images):
+#     fname = siftdir + fnames[i]
+#     mat = scipy.io.loadmat(fname)
+#     numfeats = mat['descriptors'].shape[0]
+#
+#     if i % 10 == 0:
+#         print(f'{i} images completed of {num_of_images}')
+#
+#     for j in range(numfeats):
+#         # if mat['scales'][j] > lower_limit and mat['scales'][j] < upper_limit:
+#         desciptors_row_correct_shape = np.expand_dims(mat['descriptors'][j], 0)
+#         mat_updated = np.concatenate((mat_updated, desciptors_row_correct_shape), axis=0)
+#         temp_descriptor_info = np.array([[fnames[i], j]], dtype='<U35')
+#         descriptor_info = np.concatenate((descriptor_info, temp_descriptor_info), axis=0)
+#         count+=1
+#
+#     image_decriptors_count_list_updated.append(count)
+#
+#
+# print(f'No.of descriptors is: {count} | No.of images scanned: {num_of_images} | Scale varies from {lower_limit} to {upper_limit}'   )
+#
+# # X_data now houses the required descriptors that fall in the scale range
+# # also, we can use image_decriptors_count_list_updated to tell which image a
+# # particular descriptor comes from which image.
+# mat_updated = np.delete(mat_updated, 0, 0)
+# descriptor_info = np.delete(descriptor_info, 0, 0)
+# X_data = mat_updated
+#
+# np.save('descriptors_50_images.npy', X_data)
+# np.save('descriptors_info_50_images.npy', descriptor_info)
 
-X_data = mat1['descriptors']
 
-count = mat1['descriptors'].shape[0]
-image_decriptors_count_list = [count]
+def is_descriptor_important(descriptor, existing_important_descriptors, threshold):
+    """
+        descriptor ((128, ) ndarray): the particular descriptor under consideration
+        existing_important_descriptors ((n, 128) ndarray): the existing list of descriptors that are important
+        threshold (float): the threshold for which the descriptors are eliminated
 
-lower_limit, upper_limit = 3, 4
-image_decriptors_count_list_updated = []
+        return: a boolean value saying if the descriptor is important or nor
+    """
 
-mat_updated = np.empty((1, 128), dtype=float)
-count = 0
-num_of_images = 50
+    threshold = threshold ** 2
+    m = existing_important_descriptors.shape[0]
 
-# an array to store the corresponding image name and the descriptor index with respect to that image
-descriptor_info = np.empty((1, 2), dtype='<U25')
+    descriptor = np.expand_dims(descriptor, axis=0)
 
-# choosing random images from all the images
-# fnames = shuffle_images_for_data(fnames, num_of_images)
+    broadcasted_descriptor = np.tile(descriptor, (m, 1))
+    distance_array = np.sum(((broadcasted_descriptor - existing_important_descriptors)**2), axis = 1)
 
-
-for i in range(0, num_of_images):
-    fname = siftdir + fnames[i]
-    mat = scipy.io.loadmat(fname)
-    numfeats = mat['descriptors'].shape[0]
-
-    if i % 10 == 0:
-        print(f'{i} images completed of {num_of_images}')
-
-    for j in range(numfeats):
-        # if mat['scales'][j] > lower_limit and mat['scales'][j] < upper_limit:
-        desciptors_row_correct_shape = np.expand_dims(mat['descriptors'][j], 0)
-        mat_updated = np.concatenate((mat_updated, desciptors_row_correct_shape), axis=0)
-        temp_descriptor_info = np.array([[fnames[i], j]], dtype='<U35')
-        descriptor_info = np.concatenate((descriptor_info, temp_descriptor_info), axis=0)
-        count+=1
-
-    image_decriptors_count_list_updated.append(count)
+    if np.min(distance_array) < threshold:
+        return False
+    else:
+        return True
 
 
-print(f'No.of descriptors is: {count} | No.of images scanned: {num_of_images} | Scale varies from {lower_limit} to {upper_limit}'   )
+def extract_important_descriptors(original_descriptors, original_descriptor_info, threshold):
+    """
+        original_descriptors ((n, 128) ndarray): contains the descriptors
+        original_descriptor_info ((n, 2) ndarray): contains the info of each descriptor
+        threshold (float): the threshold for which the descriptors are eliminated
 
-# X_data now houses the required descriptors that fall in the scale range
-# also, we can use image_decriptors_count_list_updated to tell which image a
-# particular descriptor comes from which image.
-mat_updated = np.delete(mat_updated, 0, 0)
-descriptor_info = np.delete(descriptor_info, 0, 0)
-X_data = mat_updated
+        return : the updated original_descriptors and original_descriptor_info
+    """
 
-np.save('descriptors_50_images.npy', X_data)
-np.save('descriptors_info_50_images.npy', descriptor_info)
+    m = original_descriptors.shape[0]
 
+    updated_descriptors = original_descriptors[0]
+    updated_descriptors = np.expand_dims(updated_descriptors, axis=0)
+
+    updated_descriptors_info = original_descriptor_info[0]
+    updated_descriptors_info = np.expand_dims(updated_descriptors_info, axis=0)
+
+    for i in range(1, m):
+
+        if i %100 == 0:
+            print(f'{i} descriptors processed out of {m} descriptors')
+
+        if is_descriptor_important(original_descriptors[i], updated_descriptors, threshold):
+            temp1 = np.expand_dims(original_descriptors[i], axis=0)
+            temp2 = np.expand_dims(original_descriptor_info[i], axis=0)
+            updated_descriptors = np.concatenate((updated_descriptors, temp1), axis=0)
+            updated_descriptors_info = np.concatenate((updated_descriptors_info, temp2), axis=0)
+        else:
+            continue
+
+    return updated_descriptors, updated_descriptors_info
+
+#
+# original_descriptors = np.load('descriptors_50_images.npy')
+# original_descriptor_info = np.load('descriptors_info_50_images.npy')
+#
+# threshold = .5
+# updated_descriptors, updated_descriptors_info = extract_important_descriptors(original_descriptors, original_descriptor_info, threshold)
+#
+# print(f'New descriptors count {updated_descriptors.shape[0]}')
+#
+# np.save('updated_descriptors_50_images', updated_descriptors)
+# np.save('updated_descriptors_info_50_images', updated_descriptors_info)
+
+updated_descriptors = np.load('updated_descriptors_50_images.npy')
+updated_descriptors_info = np.load('updated_descriptors_info_50_images.npy')
 
 def get_image_info(list_of_count, index):
     '''
@@ -135,12 +205,17 @@ def find_closest_centroids(X, centroids):
 
     temp = np.zeros((X.shape[0], K), dtype=float)
     for i in range(X.shape[0]):
-        distance = []
-        for j in range(centroids.shape[0]):
-            temp = X[i] - centroids[j]
-            temp = temp**2
-            distance.append(np.sum(temp))
-        idx[i] = np.argmin(distance)
+        # distance = []
+        # for j in range(centroids.shape[0]):
+        #     temp = X[i] - centroids[j]
+        #     temp = temp**2
+        #     distance.append(np.sum(temp))
+        temp = np.expand_dims(X[i], axis=0)
+        temp = np.tile(temp, (K, 1))
+        temp = (temp - centroids)**2
+        temp = np.sum(temp, axis=1)
+        temp.squeeze()
+        idx[i] = np.argmin(temp)
 
 
      ### END CODE HERE ###
@@ -241,10 +316,10 @@ def kMeans_init_centroids(X, K):
 
 
 # k-means clustering
-K = 100
-max_iters = 200
-initial_centroids = kMeans_init_centroids(X_data, K)
-centroids, idx = run_kMeans(X_data, initial_centroids, max_iters)
+K = 1500
+max_iters = 100
+initial_centroids = kMeans_init_centroids(updated_descriptors, K)
+centroids, idx = run_kMeans(updated_descriptors, initial_centroids, max_iters)
 
 np.save('centroids.npy', centroids)
 np.save('idx.npy', idx)
@@ -299,7 +374,6 @@ def see_patches_together(cluster_num, descriptor_info, idx):
     plt.show()
 
 
-
 def see_individual_patches(cluster_num, descriptor_info, idx):
     """
         cluster_num (int): specifies the cluster number to be viewed
@@ -320,7 +394,7 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
             imname = framesdir + image_name[:-4]
             im = io.imread(imname)
 
-            print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
+            # print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
 
             fig = plt.figure()
             ax = fig.add_subplot()
@@ -364,8 +438,6 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
     plt.show()
 
 
-
-
 print('The K-Means Clustering is complete and ready for viewing....')
 print(f'No.of visual words is {K}')
 
@@ -377,9 +449,9 @@ while want_to_continue == 'y':
     print()
 
     if see_patches == 'y':
-        see_patches_together(cluster_no, descriptor_info, idx)
+        see_patches_together(cluster_no, updated_descriptors_info, idx)
     elif see_patches == 'n':
-        see_individual_patches(cluster_no, descriptor_info, idx)
+        see_individual_patches(cluster_no, updated_descriptors_info, idx)
     else:
         print('Enter either y or n\n')
 
