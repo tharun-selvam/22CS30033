@@ -1,15 +1,12 @@
 import numpy as np
 import scipy.io
 import glob
-from scipy import misc
 import matplotlib.pyplot as plt
 from displaySIFTPatches import displaySIFTPatches
-from selectRegion import roipoly
 from getPatchFromSIFTParameters import getPatchFromSIFTParameters
 from skimage.color import rgb2gray
 import matplotlib.cm as cm
 from skimage import io
-import pylab as pl
 
 
 def is_descriptor_important(descriptor, existing_important_descriptors, threshold):
@@ -27,7 +24,7 @@ def is_descriptor_important(descriptor, existing_important_descriptors, threshol
     descriptor = np.expand_dims(descriptor, axis=0)
 
     broadcasted_descriptor = np.tile(descriptor, (m, 1))
-    distance_array = np.sum(((broadcasted_descriptor - existing_important_descriptors)**2), axis = 1)
+    distance_array = np.sum(((broadcasted_descriptor - existing_important_descriptors) ** 2), axis=1)
 
     if np.min(distance_array) < threshold:
         return False
@@ -54,7 +51,7 @@ def extract_important_descriptors(original_descriptors, original_descriptor_info
 
     for i in range(1, m):
 
-        if i %100 == 0:
+        if i % 1000 == 0:
             print(f'{i} descriptors processed out of {m} descriptors')
 
         if is_descriptor_important(original_descriptors[i], updated_descriptors, threshold):
@@ -88,33 +85,15 @@ def shuffle_images_for_data(filename_list, num_images):
 
 framesdir = 'frames/'
 siftdir = 'sift/'
-
-# Get a list of all the .mat file in that directory. There is one .mat file per image.
-# Preparation of data
 fnames = glob.glob(siftdir + '*.mat')
 fnames = [i[-27:] for i in fnames]
 
-fname1 = siftdir + fnames[0]
-mat1 = scipy.io.loadmat(fname1)
-
-X_data = mat1['descriptors']
-
-count = mat1['descriptors'].shape[0]
-image_decriptors_count_list = [count]
-
 lower_limit, upper_limit = 3, 4
-image_decriptors_count_list_updated = []
-
-mat_updated = np.empty((1, 128), dtype=float)
+mat_updated = np.empty((1, 128), dtype=float)  # array that stores the descriptors used to build visual vocabulary
 count = 0
 num_of_images = len(fnames)
-
-# an array to store the corresponding image name and the descriptor index with respect to that image
-descriptor_info = np.empty((1, 2), dtype='<U25')
-
-# choosing random images from all the images
-# fnames = shuffle_images_for_data(fnames, num_of_images)
-
+descriptor_info = np.empty((1, 2),
+                           dtype='<U25')  # an array to store the corresponding image name and the descriptor index with respect to that image
 
 for i in range(0, num_of_images):
     fname = siftdir + fnames[i]
@@ -136,16 +115,12 @@ for i in range(0, num_of_images):
             mat_updated = np.concatenate((mat_updated, desciptors_row_correct_shape), axis=0)
             temp_descriptor_info = np.array([[fnames[i], j]], dtype='<U35')
             descriptor_info = np.concatenate((descriptor_info, temp_descriptor_info), axis=0)
-            count+=1
+            count += 1
 
-    image_decriptors_count_list_updated.append(count)
-
-
-print(f'No.of descriptors is: {count} | No.of images scanned: {num_of_images} | Scale varies from {lower_limit} to {upper_limit}'   )
+print(
+    f'No.of descriptors is: {count} | No.of images scanned: {num_of_images} | Scale varies from {lower_limit} to {upper_limit}')
 
 # X_data now houses the required descriptors that fall in the scale range
-# also, we can use image_decriptors_count_list_updated to tell which image a
-# particular descriptor comes from which image.
 mat_updated = np.delete(mat_updated, 0, 0)
 descriptor_info = np.delete(descriptor_info, 0, 0)
 X_data = mat_updated
@@ -154,8 +129,7 @@ np.save('descriptors_all_images_scale_3_to_4.npy', X_data)
 np.save('descriptors_info_all_images_scale_3_to_4.npy', descriptor_info)
 
 
-
-#
+# Code to extract only the important descriptors based on a threshold
 # original_descriptors = np.load('descriptors_50_images.npy')
 # original_descriptor_info = np.load('descriptors_info_50_images.npy')
 #
@@ -169,6 +143,7 @@ np.save('descriptors_info_all_images_scale_3_to_4.npy', descriptor_info)
 
 # updated_descriptors = np.load('updated_descriptors_50_images.npy')
 # updated_descriptors_info = np.load('updated_descriptors_info_50_images.npy')
+
 
 def get_image_info(list_of_count, index):
     '''
@@ -221,13 +196,12 @@ def find_closest_centroids(X, centroids):
         #     distance.append(np.sum(temp))
         temp = np.expand_dims(X[i], axis=0)
         temp = np.tile(temp, (K, 1))
-        temp = (temp - centroids)**2
+        temp = (temp - centroids) ** 2
         temp = np.sum(temp, axis=1)
         temp.squeeze()
         idx[i] = np.argmin(temp)
 
-
-     ### END CODE HERE ###
+    ### END CODE HERE ###
 
     return idx
 
@@ -289,9 +263,8 @@ def run_kMeans(X, initial_centroids, max_iters=10):
 
     # Run K-Means
     for i in range(max_iters):
-
-        #Output progress
-        print("K-Means iteration %d/%d" % (i, max_iters-1))
+        # Output progress
+        print("K-Means iteration %d/%d" % (i, max_iters - 1))
 
         # For each example in X, assign it to the closest centroid
         # print(idx)
@@ -354,7 +327,8 @@ def see_patches_together(cluster_num, descriptor_info, idx):
             imname = framesdir + image_name[:-4]
             im = io.imread(imname)
 
-            img_patch = getPatchFromSIFTParameters(mat['positions'][patch_num,:], mat['scales'][patch_num], mat['orients'][patch_num], rgb2gray(im))
+            img_patch = getPatchFromSIFTParameters(mat['positions'][patch_num, :], mat['scales'][patch_num],
+                                                   mat['orients'][patch_num], rgb2gray(im))
             plt.imshow(img_patch, cmap=cm.Greys_r)
 
             count += 1
@@ -362,7 +336,7 @@ def see_patches_together(cluster_num, descriptor_info, idx):
 
     # Calculate the number of rows and columns for the subplot grid
     num_images = len(images)
-    rows = int(num_images**0.5)  # Square root of the number of images rounded down
+    rows = int(num_images ** 0.5)  # Square root of the number of images rounded down
     cols = (num_images + rows - 1) // rows  # Round up the number of columns
 
     # Create a grid of subplots
@@ -408,13 +382,19 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
             fig = plt.figure()
             ax = fig.add_subplot()
             ax.imshow(im)
-            coners = displaySIFTPatches(mat['positions'][patch_num:patch_num+1,:], mat['scales'][patch_num:patch_num+1,:], mat['orients'][patch_num:patch_num+1,:])
+            coners = displaySIFTPatches(mat['positions'][patch_num:patch_num + 1, :],
+                                        mat['scales'][patch_num:patch_num + 1, :],
+                                        mat['orients'][patch_num:patch_num + 1, :])
 
             for j in range(len(coners)):
-                ax.plot([coners[j][0][1], coners[j][1][1]], [coners[j][0][0], coners[j][1][0]], color='g', linestyle='-', linewidth=1)
-                ax.plot([coners[j][1][1], coners[j][2][1]], [coners[j][1][0], coners[j][2][0]], color='g', linestyle='-', linewidth=1)
-                ax.plot([coners[j][2][1], coners[j][3][1]], [coners[j][2][0], coners[j][3][0]], color='g', linestyle='-', linewidth=1)
-                ax.plot([coners[j][3][1], coners[j][0][1]], [coners[j][3][0], coners[j][0][0]], color='g', linestyle='-', linewidth=1)
+                ax.plot([coners[j][0][1], coners[j][1][1]], [coners[j][0][0], coners[j][1][0]], color='g',
+                        linestyle='-', linewidth=1)
+                ax.plot([coners[j][1][1], coners[j][2][1]], [coners[j][1][0], coners[j][2][0]], color='g',
+                        linestyle='-', linewidth=1)
+                ax.plot([coners[j][2][1], coners[j][3][1]], [coners[j][2][0], coners[j][3][0]], color='g',
+                        linestyle='-', linewidth=1)
+                ax.plot([coners[j][3][1], coners[j][0][1]], [coners[j][3][0], coners[j][0][0]], color='g',
+                        linestyle='-', linewidth=1)
             ax.set_xlim(0, im.shape[1])
             ax.set_ylim(0, im.shape[0])
             plt.gca().invert_yaxis()
@@ -426,7 +406,7 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
 
             # Calculate the number of rows and columns for the subplot grid
     num_images = len(images)
-    rows = int(num_images**0.5)  # Square root of the number of images rounded down
+    rows = int(num_images ** 0.5)  # Square root of the number of images rounded down
     cols = (num_images + rows - 1) // rows  # Round up the number of columns
 
     # Create a grid of subplots
@@ -446,7 +426,6 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
     # Show the plot with all the images
     plt.show()
 
-
 # print('The K-Means Clustering is complete and ready for viewing....')
 # print(f'No.of visual words is {K}')
 
@@ -465,14 +444,3 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
 #         print('Enter either y or n\n')
 #
 #     want_to_continue = input('If you want to see more clusters type y or else type n: ')
-
-
-
-
-
-
-
-
-
-
-
