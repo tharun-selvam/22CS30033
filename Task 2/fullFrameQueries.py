@@ -10,7 +10,6 @@ from skimage.color import rgb2gray
 import matplotlib.cm as cm
 from skimage import io
 import pylab as pl
-# from rough import find_closest_centroids
 
 idx = np.load('idx_updated.npy')
 centroids = np.load('centroids_updated.npy')

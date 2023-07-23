@@ -11,6 +11,7 @@ import matplotlib.cm as cm
 from skimage import io
 import pylab as pl
 
+
 def shuffle_images_for_data(filename_list, num_images):
     '''
         filename_list (list) = the list containing the string of all the images' names
@@ -27,6 +28,7 @@ def shuffle_images_for_data(filename_list, num_images):
     filename_list = filename_list[randidx[:num_images]]
 
     return filename_list
+
 
 #
 # framesdir = 'frames/'
@@ -136,12 +138,11 @@ def find_closest_centroids(X, centroids):
         distance = []
         for j in range(centroids.shape[0]):
             temp = X[i] - centroids[j]
-            temp = temp**2
+            temp = temp ** 2
             distance.append(np.sum(temp))
         idx[i] = np.argmin(distance)
 
-
-     ### END CODE HERE ###
+    ### END CODE HERE ###
 
     return idx
 
@@ -203,9 +204,8 @@ def run_kMeans(X, initial_centroids, max_iters=10):
 
     # Run K-Means
     for i in range(max_iters):
-
-        #Output progress
-        print("K-Means iteration %d/%d" % (i, max_iters-1))
+        # Output progress
+        print("K-Means iteration %d/%d" % (i, max_iters - 1))
 
         # For each example in X, assign it to the closest centroid
         # print(idx)
@@ -268,7 +268,8 @@ def see_patches_together(cluster_num, descriptor_info, idx):
             imname = framesdir + image_name[:-4]
             im = io.imread(imname)
 
-            img_patch = getPatchFromSIFTParameters(mat['positions'][patch_num,:], mat['scales'][patch_num], mat['orients'][patch_num], rgb2gray(im))
+            img_patch = getPatchFromSIFTParameters(mat['positions'][patch_num, :], mat['scales'][patch_num],
+                                                   mat['orients'][patch_num], rgb2gray(im))
             plt.imshow(img_patch, cmap=cm.Greys_r)
 
             count += 1
@@ -276,7 +277,7 @@ def see_patches_together(cluster_num, descriptor_info, idx):
 
     # Calculate the number of rows and columns for the subplot grid
     num_images = len(images)
-    rows = int(num_images**0.5)  # Square root of the number of images rounded down
+    rows = int(num_images ** 0.5)  # Square root of the number of images rounded down
     cols = (num_images + rows - 1) // rows  # Round up the number of columns
 
     # Create a grid of subplots
@@ -295,7 +296,6 @@ def see_patches_together(cluster_num, descriptor_info, idx):
 
     # Show the plot with all the images
     plt.show()
-
 
 
 def see_individual_patches(cluster_num, descriptor_info, idx):
@@ -318,18 +318,25 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
             imname = framesdir + image_name[:-4]
             im = io.imread(imname)
 
-            print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
+            print('imname = %s contains %d total features, each of dimension %d' % (
+            imname, numfeats, mat['descriptors'].shape[1]))
 
             fig = plt.figure()
             ax = fig.add_subplot()
             ax.imshow(im)
-            coners = displaySIFTPatches(mat['positions'][patch_num:patch_num+1,:], mat['scales'][patch_num:patch_num+1,:], mat['orients'][patch_num:patch_num+1,:])
+            coners = displaySIFTPatches(mat['positions'][patch_num:patch_num + 1, :],
+                                        mat['scales'][patch_num:patch_num + 1, :],
+                                        mat['orients'][patch_num:patch_num + 1, :])
 
             for j in range(len(coners)):
-                ax.plot([coners[j][0][1], coners[j][1][1]], [coners[j][0][0], coners[j][1][0]], color='g', linestyle='-', linewidth=1)
-                ax.plot([coners[j][1][1], coners[j][2][1]], [coners[j][1][0], coners[j][2][0]], color='g', linestyle='-', linewidth=1)
-                ax.plot([coners[j][2][1], coners[j][3][1]], [coners[j][2][0], coners[j][3][0]], color='g', linestyle='-', linewidth=1)
-                ax.plot([coners[j][3][1], coners[j][0][1]], [coners[j][3][0], coners[j][0][0]], color='g', linestyle='-', linewidth=1)
+                ax.plot([coners[j][0][1], coners[j][1][1]], [coners[j][0][0], coners[j][1][0]], color='g',
+                        linestyle='-', linewidth=1)
+                ax.plot([coners[j][1][1], coners[j][2][1]], [coners[j][1][0], coners[j][2][0]], color='g',
+                        linestyle='-', linewidth=1)
+                ax.plot([coners[j][2][1], coners[j][3][1]], [coners[j][2][0], coners[j][3][0]], color='g',
+                        linestyle='-', linewidth=1)
+                ax.plot([coners[j][3][1], coners[j][0][1]], [coners[j][3][0], coners[j][0][0]], color='g',
+                        linestyle='-', linewidth=1)
             ax.set_xlim(0, im.shape[1])
             ax.set_ylim(0, im.shape[0])
             plt.gca().invert_yaxis()
@@ -341,7 +348,7 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
 
             # Calculate the number of rows and columns for the subplot grid
     num_images = len(images)
-    rows = int(num_images**0.5)  # Square root of the number of images rounded down
+    rows = int(num_images ** 0.5)  # Square root of the number of images rounded down
     cols = (num_images + rows - 1) // rows  # Round up the number of columns
 
     # Create a grid of subplots
@@ -361,9 +368,6 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
     # Show the plot with all the images
     plt.show()
 
-
-
-
 # print('The K-Means Clustering is complete and ready for viewing....')
 # print(f'No.of visual words is {K}')
 #
@@ -382,9 +386,6 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
 #         print('Enter either y or n\n')
 #
 #     want_to_continue = input('If you want to see more clusters type y or else type n: ')
-
-
-
 
 
 # # displaying the images
@@ -452,13 +453,3 @@ def see_individual_patches(cluster_num, descriptor_info, idx):
 #     # Show the plot with all the images
 #     plt.show()
 #
-
-
-
-
-
-
-
-
-
-
