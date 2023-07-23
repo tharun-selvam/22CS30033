@@ -12,13 +12,14 @@ from skimage import io
 import pylab as pl
 # from rough import find_closest_centroids
 
-idx = np.load('dataFiles/idx.npy')
-centroids = np.load('dataFiles/centroids.npy')
+idx = np.load('idx_updated.npy')
+centroids = np.load('centroids_updated.npy')
 
 framesdir = 'frames/'
 siftdir = 'sift/'
 fnames = glob.glob(siftdir + '*.mat')
 fnames = [i[-27:] for i in fnames]
+fnames50 = fnames[:50]
 
 
 def build_histogram_of_image(image_name, visual_words):
@@ -48,16 +49,15 @@ def build_histogram_of_image(image_name, visual_words):
 
     return histogram, normalised_histogram
 
-
+#
 # histogram_combined = np.empty((1, centroids.shape[0]), dtype=float)
 # normalised_histogram_combined = np.empty((1, centroids.shape[0]), dtype=float)
 #
-# for i in range(len(fnames)):
+# for i in range(len(fnames50)):
 #
-#     if i % 10 == 0:
-#         print(f'{i} images completed of {len(fnames)}')
+#     print(f'{i} images completed of {len(fnames50)}')
 #
-#     histogram, normalised_histogram = build_histogram_of_image(fnames[i], centroids)
+#     histogram, normalised_histogram = build_histogram_of_image(fnames50[i], centroids)
 #
 #     histogram = np.expand_dims(histogram, axis=0)
 #     normalised_histogram = np.expand_dims(normalised_histogram, axis=0)
@@ -67,12 +67,13 @@ def build_histogram_of_image(image_name, visual_words):
 #
 # histogram_combined = np.delete(histogram_combined, 0, 0)
 # normalised_histogram_combined = np.delete(normalised_histogram_combined, 0, 0)
+#
+# np.save('histogram_images_combined_updated_50_images', histogram_combined)
+# np.save('normalised_histogram_images_combined_updated_50_images', normalised_histogram_combined)
 
-# np.save('histogram_images_combined', histogram_combined)
-# np.save('normalised_histogram_images_combined', normalised_histogram_combined)
 
-histogram_images_combined = np.load('histogram_images_combined_20_images.npy')
-normalised_histogram_images_combined = np.load('normalised_histogram_images_combined_20_images.npy')
+normalised_histogram_images_combined = np.load('normalised_histogram_images_combined_updated_50_images.npy')
+histogram_images_combined = np.load('histogram_images_combined_updated_50_images.npy')
 
 
 def get_the_best_frames(image_idx, num_images, normalised_histogram_combined):
@@ -95,17 +96,15 @@ def get_the_best_frames(image_idx, num_images, normalised_histogram_combined):
 
     return sorted_array[:num_images]
 
-image_idx = 12
+image_idx = 35
 matched_frames = get_the_best_frames(image_idx, 5, normalised_histogram_images_combined)
 
 
-fname = siftdir + fnames[image_idx]
+fname = siftdir + fnames50[image_idx]
 mat = scipy.io.loadmat(fname)
 
-imname = framesdir + fnames[image_idx][:-4]
+imname = framesdir + fnames50[image_idx][:-4]
 im = io.imread(imname)
-
-# print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
 
 fig = plt.figure()
 ax = fig.add_subplot()
@@ -113,19 +112,16 @@ ax.imshow(im)
 plt.show()
 
 for i in matched_frames:
-    fname = siftdir + fnames[i]
+    fname = siftdir + fnames50[i]
     mat = scipy.io.loadmat(fname)
 
-    imname = framesdir + fnames[i][:-4]
+    imname = framesdir + fnames50[i][:-4]
     im = io.imread(imname)
-
-    # print('imname = %s contains %d total features, each of dimension %d' %(imname, numfeats, mat['descriptors'].shape[1]))
 
     fig = plt.figure()
     ax = fig.add_subplot()
     ax.imshow(im)
     plt.show()
-
 
 
 

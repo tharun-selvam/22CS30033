@@ -244,8 +244,8 @@ def kMeans_init_centroids(X, K):
 # initial_centroids = kMeans_init_centroids(X_data, K)
 # centroids, idx = run_kMeans(X_data, initial_centroids, max_iters)
 #
-# np.save('centroids.npy', centroids)
-# np.save('idx.npy', idx)
+# np.save('centroids_updated.npy', centroids)
+# np.save('idx_updated.npy', idx)
 
 def see_patches_together(cluster_num, descriptor_info, idx):
     """
