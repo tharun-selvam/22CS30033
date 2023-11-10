@@ -93,12 +93,12 @@ R = np.array([[c, 0],
 kalmanGain = P_pred/(P_pred+R)
 
 kalmanGain[0, 1], kalmanGain[1, 0] = 0, 0
-P_pred[0, 1], P_pred[1, 0] = 0, 0
+P_pred[0, 1], P_pred[1, 0] = 1, 1
 
 X_actual = X_pred + kalmanGain @ (M_init - X_pred)
 P_actual = (np.ones_like(kalmanGain) - kalmanGain) @ P_pred
 
-P_actual[0, 1], P_actual[1, 0] = 1, 1
+P_actual[0, 1], P_actual[1, 0] = 0, 0
 
 print(X_actual, '\n', M_init, '\n')
 X_actual_stacked = np.reshape(X_actual, (1, 2))

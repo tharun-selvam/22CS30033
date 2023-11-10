@@ -141,8 +141,8 @@ np.save('descriptors_info_all_images_scale_3_to_4.npy', descriptor_info)
 # np.save('updated_descriptors_50_images', updated_descriptors)
 # np.save('updated_descriptors_info_50_images', updated_descriptors_info)
 
-# updated_descriptors = np.load('updated_descriptors_50_images.npy')
-# updated_descriptors_info = np.load('updated_descriptors_info_50_images.npy')
+updated_descriptors = np.load('updated_descriptors_50_images.npy')
+updated_descriptors_info = np.load('updated_descriptors_info_50_images.npy')
 
 
 def get_image_info(list_of_count, index):
@@ -298,13 +298,13 @@ def kMeans_init_centroids(X, K):
 
 
 # k-means clustering
-# K = 1500
-# max_iters = 100
-# initial_centroids = kMeans_init_centroids(updated_descriptors, K)
-# centroids, idx = run_kMeans(updated_descriptors, initial_centroids, max_iters)
-#
-# np.save('centroids_updated.npy', centroids)
-# np.save('idx_updated.npy', idx)
+K = 1500
+max_iters = 100
+initial_centroids = kMeans_init_centroids(updated_descriptors, K)
+centroids, idx = run_kMeans(updated_descriptors, initial_centroids, max_iters)
+
+np.save('centroids_updated.npy', centroids)
+np.save('idx_updated.npy', idx)
 
 def see_patches_together(cluster_num, descriptor_info, idx):
     """
